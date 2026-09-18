@@ -2,6 +2,7 @@ const summary = document.querySelector<HTMLParagraphElement>("#summary")!;
 const supporting = document.querySelector<HTMLParagraphElement>("#supporting")!;
 const button = document.querySelector<HTMLButtonElement>("#organize")!;
 const sweep = document.querySelector<HTMLDivElement>(".status-sweep")!;
+const organizeButtonMarkup = button.innerHTML;
 const demoMode =
   new URLSearchParams(window.location.search).get("demo") === "1";
 
@@ -108,7 +109,12 @@ button.addEventListener("click", async () => {
         : "Nothing to undo";
       supporting.textContent =
         "Only the latest TabFlow operation can be undone.";
-      button.innerHTML = `<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M9 7H5v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5A7 7 0 1 0 8 5.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Undo</span>`;
+      button.dataset.action = "";
+      button.onclick = null;
+      button.innerHTML = organizeButtonMarkup;
+      button.disabled = false;
+      sweep.classList.remove("done");
+      await loadSummary();
     };
   } catch (error) {
     sweep.classList.remove("processing");
