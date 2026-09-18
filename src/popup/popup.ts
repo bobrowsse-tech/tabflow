@@ -4,6 +4,9 @@ const button = document.querySelector<HTMLButtonElement>("#organize")!;
 const sweep = document.querySelector<HTMLDivElement>(".status-sweep")!;
 
 async function send<T>(type: string): Promise<T> {
+  if (typeof chrome === "undefined" || !chrome.runtime?.sendMessage) {
+    throw new Error("Open TabFlow from Chrome to inspect the current window.");
+  }
   const response = await chrome.runtime.sendMessage({ type });
   if (!response?.ok)
     throw new Error(
