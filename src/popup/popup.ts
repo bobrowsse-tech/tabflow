@@ -81,7 +81,11 @@ button.addEventListener("click", async () => {
     button.disabled = false;
   }
 });
-document
-  .querySelector("#settings")!
-  .addEventListener("click", () => void chrome.runtime.openOptionsPage());
+document.querySelector("#settings")!.addEventListener("click", () => {
+  if (typeof chrome !== "undefined" && chrome.runtime?.openOptionsPage) {
+    void chrome.runtime.openOptionsPage();
+    return;
+  }
+  window.location.href = "../settings/index.html";
+});
 void loadSummary();
