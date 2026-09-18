@@ -14,9 +14,11 @@ TabFlow is a privacy-first Chrome extension that turns the current window into a
 ```sh
 npm install
 npm run check
+npm run package
 ```
 
 Load `dist/` through `chrome://extensions` with Developer mode enabled. Re-run `npm run build` after source changes.
+`npm run package` creates `release/tabflow-chrome.zip` with `manifest.json` at the archive root.
 
 For a visual browser-only walkthrough without Chrome permissions, open `dist/popup/index.html?demo=1` after building. The demo simulates the ready, organised, and Undo states without changing real tabs.
 
