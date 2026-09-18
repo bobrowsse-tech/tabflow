@@ -3,6 +3,23 @@ const supporting = document.querySelector<HTMLParagraphElement>("#supporting")!;
 const button = document.querySelector<HTMLButtonElement>("#organize")!;
 const sweep = document.querySelector<HTMLDivElement>(".status-sweep")!;
 
+function applyTheme(theme: string | undefined): void {
+  if (theme === "Light" || theme === "Dark") {
+    document.documentElement.dataset.theme = theme.toLowerCase();
+  } else {
+    delete document.documentElement.dataset.theme;
+  }
+}
+
+async function loadTheme(): Promise<void> {
+  if (typeof chrome !== "undefined" && chrome.storage?.local) {
+    const values = await chrome.storage.local.get("theme");
+    applyTheme(typeof values.theme === "string" ? values.theme : undefined);
+    return;
+  }
+  applyTheme(window.localStorage.getItem("tabflow:theme") ?? undefined);
+}
+
 async function send<T>(type: string): Promise<T> {
   if (typeof chrome === "undefined" || !chrome.runtime?.sendMessage) {
     throw new Error("Open TabFlow from Chrome to inspect the current window.");
@@ -92,3 +109,6 @@ document.querySelector("#settings")!.addEventListener("click", () => {
   window.location.href = "../settings/index.html";
 });
 void loadSummary();
+void loadTheme();
+
+export {};

@@ -18,6 +18,14 @@ function readPreviewValue(key: string): string | boolean | undefined {
   return value === "true" || value === "false" ? value === "true" : value;
 }
 
+function applyTheme(theme: string | undefined): void {
+  if (theme === "Light" || theme === "Dark") {
+    document.documentElement.dataset.theme = theme.toLowerCase();
+  } else {
+    delete document.documentElement.dataset.theme;
+  }
+}
+
 const valuesPromise = extensionStorage
   ? extensionStorage.get(keys)
   : Promise.resolve(
@@ -34,8 +42,11 @@ void valuesPromise.then((values) => {
     if (!input || values[key] === undefined) continue;
     if (input instanceof HTMLInputElement) input.checked = Boolean(values[key]);
     else input.value = String(values[key]);
+    if (key === "theme") applyTheme(String(values[key]));
   }
 });
+
+export {};
 for (const input of Array.from(
   document.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-key]"),
 ))
@@ -43,6 +54,7 @@ for (const input of Array.from(
     const key = input.dataset.key!;
     const value =
       input instanceof HTMLInputElement ? input.checked : input.value;
+    if (key === "theme") applyTheme(String(value));
     const save = extensionStorage
       ? extensionStorage.set({ [key]: value })
       : Promise.resolve(
