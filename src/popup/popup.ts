@@ -2,6 +2,8 @@ const summary = document.querySelector<HTMLParagraphElement>("#summary")!;
 const supporting = document.querySelector<HTMLParagraphElement>("#supporting")!;
 const button = document.querySelector<HTMLButtonElement>("#organize")!;
 const sweep = document.querySelector<HTMLDivElement>(".status-sweep")!;
+const demoMode =
+  new URLSearchParams(window.location.search).get("demo") === "1";
 
 function applyTheme(theme: string | undefined): void {
   if (theme === "Light" || theme === "Dark") {
@@ -21,6 +23,23 @@ async function loadTheme(): Promise<void> {
 }
 
 async function send<T>(type: string): Promise<T> {
+  if (demoMode) {
+    if (type === "summary") {
+      return { ok: true, summary: { totalTabs: 27, duplicates: 4 } } as T;
+    }
+    if (type === "organize") {
+      return {
+        ok: true,
+        result: {
+          keptTabs: 23,
+          duplicatesRemoved: 4,
+          groupsCreated: 5,
+          leftUngrouped: 3,
+        },
+      } as T;
+    }
+    return { ok: true, restored: true } as T;
+  }
   if (typeof chrome === "undefined" || !chrome.runtime?.sendMessage) {
     throw new Error("Open TabFlow from Chrome to inspect the current window.");
   }

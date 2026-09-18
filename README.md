@@ -18,6 +18,8 @@ npm run check
 
 Load `dist/` through `chrome://extensions` with Developer mode enabled. Re-run `npm run build` after source changes.
 
+For a visual browser-only walkthrough without Chrome permissions, open `dist/popup/index.html?demo=1` after building. The demo simulates the ready, organised, and Undo states without changing real tabs.
+
 ## Documentation
 
 Public product and engineering documentation is in [`docs/`](docs/). Maintainer notes that must remain local to the checkout are in [`docs/local-only/`](docs/local-only/) and are excluded from Git.
