@@ -57,10 +57,10 @@ export async function organizeWindow(
   const createdGroupIds: number[] = [];
   for (const group of plan.groups) {
     try {
-      const groupId = await chrome.tabs.group({
-        tabIds: group.tabIds,
+      const groupId = (await chrome.tabs.group({
+        tabIds: nonEmptyTabIds(group.tabIds),
         createProperties: { windowId },
-      });
+      })) as unknown as number;
       await chrome.tabGroups.update(groupId, {
         title: group.category,
         color: colorFor(group.category),
@@ -72,8 +72,9 @@ export async function organizeWindow(
     }
   }
   const stored = await chrome.storage.local.get("tabflowUndo");
+  const storedUndo = stored.tabflowUndo as Record<string, unknown> | undefined;
   await chrome.storage.local.set({
-    tabflowUndo: { ...stored.tabflowUndo, createdGroupIds },
+    tabflowUndo: { ...(storedUndo ?? {}), createdGroupIds },
   });
   return {
     totalTabs: tabs.length,
@@ -128,7 +129,7 @@ export async function undoLastOrganization(): Promise<boolean> {
     const tabIds = tabs
       .map((tab) => tab.id)
       .filter((id): id is number => typeof id === "number");
-    if (tabIds.length) await chrome.tabs.ungroup(tabIds);
+    if (tabIds.length) await chrome.tabs.ungroup(nonEmptyTabIds(tabIds));
   }
   for (const group of snapshot.originalGroups ?? []) {
     const restoredIds = group.tabIds
@@ -140,12 +141,15 @@ export async function undoLastOrganization(): Promise<boolean> {
       groupId: group.id,
     });
     if (existing.length) {
-      await chrome.tabs.group({ tabIds: restoredIds, groupId: group.id });
-    } else {
-      const recreatedGroupId = await chrome.tabs.group({
-        tabIds: restoredIds,
-        createProperties: { windowId: snapshot.windowId },
+      await chrome.tabs.group({
+        tabIds: nonEmptyTabIds(restoredIds),
+        groupId: group.id,
       });
+    } else {
+      const recreatedGroupId = (await chrome.tabs.group({
+        tabIds: nonEmptyTabIds(restoredIds),
+        createProperties: { windowId: snapshot.windowId },
+      })) as unknown as number;
       await chrome.tabGroups.update(recreatedGroupId, {
         title: group.title,
         color: group.color as GroupColor,
@@ -154,6 +158,11 @@ export async function undoLastOrganization(): Promise<boolean> {
   }
   await chrome.storage.local.remove("tabflowUndo");
   return true;
+}
+
+function nonEmptyTabIds(tabIds: number[]): [number, ...number[]] {
+  if (!tabIds.length) throw new Error("A Chrome tab group must contain a tab.");
+  return tabIds as [number, ...number[]];
 }
 
 type GroupColor =

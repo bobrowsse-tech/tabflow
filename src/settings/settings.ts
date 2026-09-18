@@ -27,7 +27,7 @@ function applyTheme(theme: string | undefined): void {
 }
 
 const valuesPromise = extensionStorage
-  ? extensionStorage.get(keys)
+  ? extensionStorage.get([...keys])
   : Promise.resolve(
       Object.fromEntries(
         keys.map((key) => [key, readPreviewValue(key)]),
