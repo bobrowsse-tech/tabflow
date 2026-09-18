@@ -1,9 +1,22 @@
-import type { OrganizationPlan, TabRecord } from "../shared/types";
+import type {
+  OrganizationPlan,
+  OrganizationSettings,
+  TabRecord,
+} from "../shared/types";
 import { classifyTab } from "./classifier";
 import { findDuplicateTabIds } from "./duplicate-detector";
 
-export function buildPlan(tabs: TabRecord[]): OrganizationPlan {
-  const closeTabIds = findDuplicateTabIds(tabs);
+export function buildPlan(
+  tabs: TabRecord[],
+  settings: OrganizationSettings = {
+    preserveGroups: true,
+    removeDuplicates: true,
+    groupUngrouped: true,
+  },
+): OrganizationPlan {
+  const closeTabIds = settings.removeDuplicates
+    ? findDuplicateTabIds(tabs)
+    : [];
   const closeSet = new Set(closeTabIds);
   const keepTabs = tabs.filter((tab) => !closeSet.has(tab.id));
   const grouped = new Map<
@@ -13,7 +26,11 @@ export function buildPlan(tabs: TabRecord[]): OrganizationPlan {
   const ungroupedTabIds: number[] = [];
 
   for (const tab of keepTabs) {
-    if (tab.pinned || tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE) {
+    if (tab.pinned || (settings.preserveGroups && tab.groupId !== -1)) {
+      ungroupedTabIds.push(tab.id);
+      continue;
+    }
+    if (!settings.groupUngrouped) {
       ungroupedTabIds.push(tab.id);
       continue;
     }

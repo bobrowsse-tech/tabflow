@@ -1,3 +1,4 @@
+import { canonicalizeUrl } from "../core/canonicalize-url";
 import { organizeWindow, undoLastOrganization } from "../core/organizer";
 
 chrome.runtime.onMessage.addListener(
@@ -16,7 +17,7 @@ chrome.runtime.onMessage.addListener(
         const urls = new Set<string>();
         let duplicates = 0;
         for (const tab of tabs) {
-          const url = tab.url ?? "";
+          const url = canonicalizeUrl(tab.url ?? "");
           if (urls.has(url)) duplicates += 1;
           else urls.add(url);
         }

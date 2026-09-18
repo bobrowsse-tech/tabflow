@@ -60,7 +60,10 @@ const tabs = [
   },
 ];
 
-function installChromeMock(options: { failGrouping?: boolean } = {}) {
+function installChromeMock(
+  options: { failGrouping?: boolean } = {},
+  sourceTabs = tabs,
+) {
   const storage = new Map<string, unknown>();
   const removed: number[][] = [];
   const created: Array<{ url?: string; index?: number; pinned?: boolean }> = [];
@@ -76,6 +79,7 @@ function installChromeMock(options: { failGrouping?: boolean } = {}) {
   vi.stubGlobal("chrome", {
     tabGroups: {
       TAB_GROUP_ID_NONE: -1,
+      query: vi.fn(async () => [{ id: 42, title: "Existing", color: "red" }]),
       update: vi.fn(async (groupId, details) => {
         if (options.failGrouping) throw new Error("group failed");
         updated.push({ groupId, ...details });
@@ -84,13 +88,13 @@ function installChromeMock(options: { failGrouping?: boolean } = {}) {
     tabs: {
       query: vi.fn(
         async ({ groupId }: { windowId: number; groupId?: number }) => {
-          if (groupId === undefined) return tabs;
+          if (groupId === undefined) return sourceTabs;
           const createdGroup = grouped.find((entry) =>
             entry.groupIds?.includes(groupId),
           );
           return createdGroup
-            ? tabs.filter((tab) => createdGroup.tabIds.includes(tab.id))
-            : tabs.filter((tab) => tab.groupId === groupId);
+            ? sourceTabs.filter((tab) => createdGroup.tabIds.includes(tab.id))
+            : sourceTabs.filter((tab) => tab.groupId === groupId);
         },
       ),
       remove: vi.fn(async (tabIds: number[]) => {
@@ -100,15 +104,25 @@ function installChromeMock(options: { failGrouping?: boolean } = {}) {
         async ({
           tabIds,
           createProperties,
+          groupId: existingGroupId,
         }: {
           tabIds: number[];
-          createProperties: { windowId: number };
+          createProperties?: { windowId: number };
+          groupId?: number;
         }) => {
           if (options.failGrouping) throw new Error("group failed");
+          if (existingGroupId !== undefined) {
+            grouped.push({
+              tabIds,
+              windowId: createProperties?.windowId ?? 7,
+              groupIds: [existingGroupId],
+            });
+            return existingGroupId;
+          }
           const groupId = nextGroupId++;
           grouped.push({
             tabIds,
-            windowId: createProperties.windowId,
+            windowId: createProperties!.windowId,
             groupIds: [groupId],
           });
           return groupId;
@@ -118,6 +132,7 @@ function installChromeMock(options: { failGrouping?: boolean } = {}) {
         created.push(details);
         return { id: 200 + created.length };
       }),
+      move: vi.fn(async () => undefined),
       ungroup: vi.fn(async (tabIds: number[]) => {
         ungrouped.push(tabIds);
       }),
@@ -128,7 +143,13 @@ function installChromeMock(options: { failGrouping?: boolean } = {}) {
           for (const [key, value] of Object.entries(values))
             storage.set(key, value);
         }),
-        get: vi.fn(async (key: string) => ({ [key]: storage.get(key) })),
+        get: vi.fn(async (key: string | string[]) =>
+          Array.isArray(key)
+            ? Object.fromEntries(
+                key.map((entry) => [entry, storage.get(entry)]),
+              )
+            : { [key]: storage.get(key) },
+        ),
         remove: vi.fn(async (key: string) => {
           storage.delete(key);
         }),
@@ -191,5 +212,20 @@ describe("Chrome organization simulation", () => {
     expect(result.groupsCreated).toBe(0);
     expect(result.error).toContain("Chrome prevented");
     expect(mock.removed).toEqual([[2]]);
+  });
+
+  it("honours disabled duplicate removal and grouping settings", async () => {
+    const mock = installChromeMock();
+    await chrome.storage.local.set({
+      removeDuplicates: false,
+      groupUngrouped: false,
+    });
+
+    const result = await organizeWindow(7);
+
+    expect(result.duplicatesRemoved).toBe(0);
+    expect(result.groupsCreated).toBe(0);
+    expect(mock.removed).toEqual([]);
+    expect(mock.grouped).toEqual([]);
   });
 });

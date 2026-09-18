@@ -41,6 +41,19 @@ export interface OrganizationPlan {
   ungroupedTabIds: number[];
 }
 
+export interface OrganizationSettings {
+  preserveGroups: boolean;
+  removeDuplicates: boolean;
+  groupUngrouped: boolean;
+}
+
+export interface UndoGroupSnapshot {
+  id: number;
+  title?: string;
+  color: string;
+  tabIds: number[];
+}
+
 export interface OrganizationResult {
   totalTabs: number;
   keptTabs: number;

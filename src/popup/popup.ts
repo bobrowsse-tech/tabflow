@@ -1,10 +1,13 @@
 const summary = document.querySelector<HTMLParagraphElement>("#summary")!;
 const supporting = document.querySelector<HTMLParagraphElement>("#supporting")!;
 const button = document.querySelector<HTMLButtonElement>("#organize")!;
+const cancel = document.querySelector<HTMLButtonElement>("#cancel")!;
 const sweep = document.querySelector<HTMLDivElement>(".status-sweep")!;
 const organizeButtonMarkup = button.innerHTML;
 const demoMode =
   new URLSearchParams(window.location.search).get("demo") === "1";
+let duplicateCount = 0;
+let confirmationShown = false;
 
 function applyTheme(theme: string | undefined): void {
   if (theme === "Light" || theme === "Dark") {
@@ -57,6 +60,8 @@ async function loadSummary() {
     const response = await send<{
       summary: { totalTabs: number; duplicates: number };
     }>("summary");
+    confirmationShown = false;
+    cancel.hidden = true;
     if (response.summary.totalTabs <= 1) {
       summary.textContent = "Nothing to organise";
       supporting.textContent = "Open a few tabs and TabFlow can clean them up.";
@@ -64,6 +69,7 @@ async function loadSummary() {
       return;
     }
     summary.textContent = `${response.summary.totalTabs} tabs · ${response.summary.duplicates} duplicates`;
+    duplicateCount = response.summary.duplicates;
     supporting.textContent = response.summary.duplicates
       ? `${response.summary.duplicates} duplicate tab${response.summary.duplicates === 1 ? "" : "s"} will be closed.`
       : "Current window";
@@ -78,6 +84,13 @@ async function loadSummary() {
 
 button.addEventListener("click", async () => {
   if (button.dataset.action === "undo") return;
+  if (duplicateCount > 0 && !confirmationShown) {
+    confirmationShown = true;
+    summary.textContent = `${duplicateCount} duplicate tab${duplicateCount === 1 ? "" : "s"} will be closed.`;
+    supporting.textContent = "The earliest open copy of each URL will be kept.";
+    cancel.hidden = false;
+    return;
+  }
   button.disabled = true;
   button.textContent = "Organising...";
   summary.textContent = "Organising...";
@@ -97,6 +110,7 @@ button.addEventListener("click", async () => {
     sweep.classList.add("done");
     summary.textContent = "Workspace organised";
     supporting.textContent = `${result.keptTabs} tabs kept · ${result.duplicatesRemoved} duplicates removed · ${result.groupsCreated} groups created${result.leftUngrouped ? ` · ${result.leftUngrouped} left ungrouped` : ""}`;
+    cancel.hidden = true;
     button.dataset.action = "undo";
     button.innerHTML = `<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M9 7H5v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5A7 7 0 1 0 8 5.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Undo</span>`;
     button.disabled = false;
@@ -125,6 +139,11 @@ button.addEventListener("click", async () => {
     button.textContent = "Try again";
     button.disabled = false;
   }
+});
+cancel.addEventListener("click", () => {
+  confirmationShown = false;
+  cancel.hidden = true;
+  void loadSummary();
 });
 document.querySelector("#settings")!.addEventListener("click", () => {
   if (typeof chrome !== "undefined" && chrome.runtime?.openOptionsPage) {

@@ -1,4 +1,9 @@
-import type { OrganizationResult, TabRecord } from "../shared/types";
+import type {
+  OrganizationResult,
+  OrganizationSettings,
+  TabRecord,
+  UndoGroupSnapshot,
+} from "../shared/types";
 import { buildPlan } from "./group-planner";
 
 export async function organizeWindow(
@@ -17,11 +22,32 @@ export async function organizeWindow(
       pinned: Boolean(tab.pinned),
       groupId: tab.groupId,
     }));
-  const plan = buildPlan(tabs);
+  const storedSettings = await chrome.storage.local.get([
+    "preserveGroups",
+    "removeDuplicates",
+    "groupUngrouped",
+  ]);
+  const settings: OrganizationSettings = {
+    preserveGroups: storedSettings.preserveGroups !== false,
+    removeDuplicates: storedSettings.removeDuplicates !== false,
+    groupUngrouped: storedSettings.groupUngrouped !== false,
+  };
+  const plan = buildPlan(tabs, settings);
+  const originalGroups: UndoGroupSnapshot[] = await Promise.all(
+    (await chrome.tabGroups.query({ windowId })).map(async (group) => ({
+      id: group.id,
+      title: group.title,
+      color: group.color,
+      tabIds: tabs
+        .filter((tab) => tab.groupId === group.id)
+        .map((tab) => tab.id),
+    })),
+  );
   await chrome.storage.local.set({
     tabflowUndo: {
       windowId,
       closedTabs: tabs.filter((tab) => plan.closeTabIds.includes(tab.id)),
+      originalGroups,
       savedAt: Date.now(),
     },
   });
@@ -71,16 +97,27 @@ export async function undoLastOrganization(): Promise<boolean> {
     | {
         windowId: number;
         closedTabs: TabRecord[];
+        originalGroups?: UndoGroupSnapshot[];
         createdGroupIds?: number[];
       }
     | undefined;
   if (!snapshot) return false;
+  const restoredTabs = new Map<number, number>();
   for (const tab of snapshot.closedTabs) {
-    await chrome.tabs.create({
+    const restored = await chrome.tabs.create({
       windowId: snapshot.windowId,
       url: tab.url,
       index: tab.index,
       pinned: tab.pinned,
+    });
+    if (typeof restored.id === "number") restoredTabs.set(tab.id, restored.id);
+  }
+  for (const tab of snapshot.closedTabs) {
+    const restoredId = restoredTabs.get(tab.id);
+    if (restoredId === undefined || tab.groupId !== -1) continue;
+    await chrome.tabs.move(restoredId, {
+      windowId: snapshot.windowId,
+      index: tab.index,
     });
   }
   for (const groupId of snapshot.createdGroupIds ?? []) {
@@ -92,6 +129,28 @@ export async function undoLastOrganization(): Promise<boolean> {
       .map((tab) => tab.id)
       .filter((id): id is number => typeof id === "number");
     if (tabIds.length) await chrome.tabs.ungroup(tabIds);
+  }
+  for (const group of snapshot.originalGroups ?? []) {
+    const restoredIds = group.tabIds
+      .map((tabId) => restoredTabs.get(tabId))
+      .filter((id): id is number => typeof id === "number");
+    if (!restoredIds.length) continue;
+    const existing = await chrome.tabs.query({
+      windowId: snapshot.windowId,
+      groupId: group.id,
+    });
+    if (existing.length) {
+      await chrome.tabs.group({ tabIds: restoredIds, groupId: group.id });
+    } else {
+      const recreatedGroupId = await chrome.tabs.group({
+        tabIds: restoredIds,
+        createProperties: { windowId: snapshot.windowId },
+      });
+      await chrome.tabGroups.update(recreatedGroupId, {
+        title: group.title,
+        color: group.color as GroupColor,
+      });
+    }
   }
   await chrome.storage.local.remove("tabflowUndo");
   return true;

@@ -3,7 +3,7 @@
   "name": "TabFlow",
   "version": "0.1.0",
   "description": "Organise the current Chrome window locally, with a clear path back.",
-  "permissions": ["tabs", "tabGroups", "storage", "sessions"],
+  "permissions": ["tabs", "tabGroups", "storage"],
   "action": {
     "default_title": "TabFlow",
     "default_popup": "popup/index.html"

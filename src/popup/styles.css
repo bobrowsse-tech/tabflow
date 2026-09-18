@@ -45,8 +45,8 @@ header strong {
   letter-spacing: -0.01em;
 }
 .icon-button {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -123,6 +123,32 @@ header strong {
 }
 .primary svg {
   flex: 0 0 auto;
+}
+.secondary {
+  min-height: 40px;
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font: 600 13px var(--font-ui);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 16px;
+}
+.secondary[hidden] {
+  display: none;
+}
+.secondary:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+.secondary:focus-visible {
+  outline: 3px solid #9eafff;
+  outline-offset: 2px;
 }
 .primary:hover {
   background: var(--accent-hover);
