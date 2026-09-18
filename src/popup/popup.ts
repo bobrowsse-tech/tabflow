@@ -37,7 +37,7 @@ async function loadSummary() {
 }
 
 button.addEventListener("click", async () => {
-  if (button.textContent === "Undo") return;
+  if (button.dataset.action === "undo") return;
   button.disabled = true;
   button.textContent = "Organising...";
   summary.textContent = "Organising...";
@@ -57,18 +57,19 @@ button.addEventListener("click", async () => {
     sweep.classList.add("done");
     summary.textContent = "Workspace organised";
     supporting.textContent = `${result.keptTabs} tabs kept · ${result.duplicatesRemoved} duplicates removed · ${result.groupsCreated} groups created${result.leftUngrouped ? ` · ${result.leftUngrouped} left ungrouped` : ""}`;
-    button.textContent = "Undo";
+    button.dataset.action = "undo";
+    button.innerHTML = `<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M9 7H5v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5A7 7 0 1 0 8 5.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Undo</span>`;
     button.disabled = false;
     button.onclick = async () => {
       button.disabled = true;
-      button.textContent = "Undoing...";
+      button.innerHTML = `<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M9 7H5v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5A7 7 0 1 0 8 5.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Undoing...</span>`;
       const undone = await send<{ restored: boolean }>("undo");
       summary.textContent = undone.restored
         ? "Previous organisation undone"
         : "Nothing to undo";
       supporting.textContent =
         "Only the latest TabFlow operation can be undone.";
-      button.textContent = "Undo";
+      button.innerHTML = `<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M9 7H5v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5A7 7 0 1 0 8 5.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Undo</span>`;
     };
   } catch (error) {
     sweep.classList.remove("processing");

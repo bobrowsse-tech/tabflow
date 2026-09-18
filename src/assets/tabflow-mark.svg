@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="title desc">
+  <title id="title">TabFlow mark</title>
+  <desc id="desc">Three blue tabs arranged into a calm flow</desc>
+  <rect width="48" height="48" rx="12" fill="#315CFF"/>
+  <path d="M13 15.5A3.5 3.5 0 0 1 16.5 12H29a3.5 3.5 0 0 1 3.5 3.5V18H16.5A3.5 3.5 0 0 0 13 21.5v-6Z" fill="#fff" opacity=".98"/>
+  <path d="M13 23.5A3.5 3.5 0 0 1 16.5 20H35a3.5 3.5 0 0 1 3.5 3.5V26h-22a3.5 3.5 0 0 0-3.5 3.5v-6Z" fill="#fff" opacity=".78"/>
+  <path d="M13 31.5A3.5 3.5 0 0 1 16.5 28H29a3.5 3.5 0 0 1 3.5 3.5V34H16.5a3.5 3.5 0 0 0-3.5 3.5v-6Z" fill="#fff" opacity=".58"/>
+</svg>
