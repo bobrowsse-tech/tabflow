@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "TabFlow",
+  "version": "0.1.0",
+  "description": "Organise the current Chrome window locally, with a clear path back.",
+  "permissions": ["tabs", "tabGroups", "storage", "sessions"],
+  "action": {
+    "default_title": "TabFlow",
+    "default_popup": "popup/index.html"
+  },
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "options_page": "settings/index.html",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

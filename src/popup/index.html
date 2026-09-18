@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TabFlow</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="popup" aria-live="polite">
+      <header>
+        <strong>TabFlow</strong
+        ><button
+          id="settings"
+          class="icon-button"
+          aria-label="Open settings"
+          title="Settings">
+          &#9881;
+        </button>
+      </header>
+      <p class="eyebrow">Your tabs, organised.</p>
+      <section id="content" class="content">
+        <div class="status-sweep" aria-hidden="true"><span></span></div>
+        <p id="summary" class="summary">Checking current window...</p>
+        <button id="organize" class="primary" type="button">
+          Organise tabs
+        </button>
+        <p id="supporting" class="supporting">Current window</p>
+      </section>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

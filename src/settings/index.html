@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>TabFlow settings</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="kicker">TabFlow</p>
+        <h1>Settings</h1>
+        <p class="lede">Keep organisation predictable and local.</p>
+      </header>
+      <section>
+        <h2>Organisation</h2>
+        <label
+          ><input type="checkbox" data-key="preserveGroups" checked /> Preserve
+          existing groups</label
+        ><label
+          ><input type="checkbox" data-key="removeDuplicates" checked /> Remove
+          duplicates</label
+        ><label
+          ><input type="checkbox" data-key="groupUngrouped" checked /> Group
+          ungrouped tabs</label
+        >
+      </section>
+      <section>
+        <h2>Grouping</h2>
+        <label
+          >Group naming<select data-key="naming">
+            <option>Standard</option>
+            <option>Simple</option>
+          </select></label
+        ><label
+          >Minimum confidence<select data-key="confidence">
+            <option>Conservative</option>
+            <option>Balanced</option>
+          </select></label
+        >
+      </section>
+      <section>
+        <h2>Appearance</h2>
+        <label
+          >Theme<select data-key="theme">
+            <option>System</option>
+            <option>Light</option>
+            <option>Dark</option>
+          </select></label
+        >
+      </section>
+      <section>
+        <h2>Privacy</h2>
+        <p>
+          TabFlow does not collect, upload, or sell your browsing data. Tab
+          organisation happens locally in Chrome. No account or TabFlow server
+          is required.
+        </p>
+      </section>
+      <p id="saved" role="status" aria-live="polite"></p>
+    </main>
+    <script src="settings.js"></script>
+  </body>
+</html>
