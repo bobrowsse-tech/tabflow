@@ -4,3 +4,27 @@ release/
 coverage/
 .DS_Store
 docs/local-only/
+
+# Local AI agent kit (keep out of the published extension repo)
+.ai/
+.agents/
+.claude/
+.githooks/
+.husky/
+.gitattributes
+.github/
+AGENTS.md
+CLAUDE.md
+scripts/ai/
+docs/agents.md
+docs/architecture.md
+docs/conventions.md
+docs/design.md
+docs/environment.md
+docs/features.md
+docs/functionality-index.md
+docs/index.md
+docs/memory.md
+docs/schema.md
+docs/tasks.md
+docs/userjourney.md

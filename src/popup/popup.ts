@@ -4,6 +4,7 @@ const button = document.querySelector<HTMLButtonElement>("#organize")!;
 const cancel = document.querySelector<HTMLButtonElement>("#cancel")!;
 const sweep = document.querySelector<HTMLDivElement>(".status-sweep")!;
 const organizeButtonMarkup = button.innerHTML;
+const undoButtonMarkup = `<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M9 7H5v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5A7 7 0 1 0 8 5.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Undo</span>`;
 const demoMode =
   new URLSearchParams(window.location.search).get("demo") === "1";
 let duplicateCount = 0;
@@ -29,7 +30,10 @@ async function loadTheme(): Promise<void> {
 async function send<T>(type: string): Promise<T> {
   if (demoMode) {
     if (type === "summary") {
-      return { ok: true, summary: { totalTabs: 27, duplicates: 4 } } as T;
+      return {
+        ok: true,
+        summary: { totalTabs: 27, duplicates: 4, canUndo: false },
+      } as T;
     }
     if (type === "organize") {
       return {
@@ -55,19 +59,62 @@ async function send<T>(type: string): Promise<T> {
   return response as T;
 }
 
+function enterUndoMode(detail: string): void {
+  confirmationShown = false;
+  cancel.hidden = true;
+  sweep.classList.add("done");
+  summary.textContent = "Workspace organised";
+  supporting.textContent = detail;
+  button.dataset.action = "undo";
+  button.innerHTML = undoButtonMarkup;
+  button.disabled = false;
+}
+
+async function performUndo(): Promise<void> {
+  button.disabled = true;
+  button.innerHTML = `<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M9 7H5v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5A7 7 0 1 0 8 5.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Undoing...</span>`;
+  try {
+    const undone = await send<{ restored: boolean }>("undo");
+    summary.textContent = undone.restored
+      ? "Previous organisation undone"
+      : "Nothing to undo";
+    supporting.textContent = "Only the latest TabFlow operation can be undone.";
+  } catch (error) {
+    summary.textContent =
+      error instanceof Error
+        ? error.message
+        : "TabFlow could not complete that action.";
+  }
+  button.dataset.action = "";
+  button.innerHTML = organizeButtonMarkup;
+  button.disabled = false;
+  sweep.classList.remove("done");
+  await loadSummary();
+}
+
 async function loadSummary() {
   try {
     const response = await send<{
-      summary: { totalTabs: number; duplicates: number };
+      summary: { totalTabs: number; duplicates: number; canUndo: boolean };
     }>("summary");
     confirmationShown = false;
     cancel.hidden = true;
+    if (response.summary.canUndo) {
+      enterUndoMode(
+        "Chrome closed this popup when tabs changed. Undo is still available here.",
+      );
+      return;
+    }
+    button.dataset.action = "";
+    button.innerHTML = organizeButtonMarkup;
+    sweep.classList.remove("done");
     if (response.summary.totalTabs <= 1) {
       summary.textContent = "Nothing to organise";
       supporting.textContent = "Open a few tabs and TabFlow can clean them up.";
       button.disabled = true;
       return;
     }
+    button.disabled = false;
     summary.textContent = `${response.summary.totalTabs} tabs · ${response.summary.duplicates} duplicates`;
     duplicateCount = response.summary.duplicates;
     supporting.textContent = response.summary.duplicates
@@ -83,7 +130,10 @@ async function loadSummary() {
 }
 
 button.addEventListener("click", async () => {
-  if (button.dataset.action === "undo") return;
+  if (button.dataset.action === "undo") {
+    await performUndo();
+    return;
+  }
   if (duplicateCount > 0 && !confirmationShown) {
     confirmationShown = true;
     summary.textContent = `${duplicateCount} duplicate tab${duplicateCount === 1 ? "" : "s"} will be closed.`;
@@ -103,33 +153,25 @@ button.addEventListener("click", async () => {
         duplicatesRemoved: number;
         groupsCreated: number;
         leftUngrouped: number;
+        error?: string;
       };
     }>("organize");
     const result = response.result;
     sweep.classList.remove("processing");
-    sweep.classList.add("done");
-    summary.textContent = "Workspace organised";
-    supporting.textContent = `${result.keptTabs} tabs kept · ${result.duplicatesRemoved} duplicates removed · ${result.groupsCreated} groups created${result.leftUngrouped ? ` · ${result.leftUngrouped} left ungrouped` : ""}`;
-    cancel.hidden = true;
-    button.dataset.action = "undo";
-    button.innerHTML = `<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M9 7H5v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5A7 7 0 1 0 8 5.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Undo</span>`;
-    button.disabled = false;
-    button.onclick = async () => {
-      button.disabled = true;
-      button.innerHTML = `<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M9 7H5v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5A7 7 0 1 0 8 5.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Undoing...</span>`;
-      const undone = await send<{ restored: boolean }>("undo");
-      summary.textContent = undone.restored
-        ? "Previous organisation undone"
-        : "Nothing to undo";
-      supporting.textContent =
-        "Only the latest TabFlow operation can be undone.";
-      button.dataset.action = "";
-      button.onclick = null;
-      button.innerHTML = organizeButtonMarkup;
-      button.disabled = false;
-      sweep.classList.remove("done");
-      await loadSummary();
-    };
+    const detail = [
+      `${result.keptTabs} tabs kept`,
+      `${result.duplicatesRemoved} duplicates removed`,
+      `${result.groupsCreated} groups created`,
+      result.leftUngrouped ? `${result.leftUngrouped} left ungrouped` : "",
+      result.error ?? "",
+      result.groupsCreated === 0 && !result.error
+        ? "Need two or more matching tabs to form a group."
+        : "",
+      "Re-open TabFlow to undo if this popup closes.",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    enterUndoMode(detail);
   } catch (error) {
     sweep.classList.remove("processing");
     summary.textContent =

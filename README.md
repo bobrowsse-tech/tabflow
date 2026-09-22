@@ -7,7 +7,7 @@ TabFlow is a privacy-first Chrome extension that turns the current window into a
 - Organisation happens locally in Chrome. There is no backend, account, analytics, telemetry, or external AI service.
 - Existing groups and pinned tabs are preserved by default.
 - Duplicate survivors are deterministic: the earliest open tab stays, later duplicates are closed only after the user starts organisation.
-- Low-confidence tabs remain ungrouped.
+- Groups are discovered locally from same-site tabs, shared title/URL tokens, and soft domain hints; singletons stay ungrouped.
 
 ## Development
 

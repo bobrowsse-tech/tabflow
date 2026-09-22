@@ -22,5 +22,4 @@ await cp("src/popup/index.html", "dist/popup/index.html");
 await cp("src/popup/styles.css", "dist/popup/styles.css");
 await cp("src/settings/index.html", "dist/settings/index.html");
 await cp("src/settings/styles.css", "dist/settings/styles.css");
-await mkdir("dist/assets", { recursive: true });
-await cp("src/assets/tabflow-mark.svg", "dist/assets/tabflow-mark.svg");
+await cp("src/assets", "dist/assets", { recursive: true });

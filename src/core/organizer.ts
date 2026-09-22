@@ -52,9 +52,9 @@ export async function organizeWindow(
     },
   });
   let partial = false;
-  if (plan.closeTabIds.length) await chrome.tabs.remove(plan.closeTabIds);
   let groupsCreated = 0;
   const createdGroupIds: number[] = [];
+  // Group before closing duplicates so the popup can stay open a little longer.
   for (const group of plan.groups) {
     try {
       const groupId = (await chrome.tabs.group({
@@ -71,11 +71,13 @@ export async function organizeWindow(
       partial = true;
     }
   }
+  if (plan.closeTabIds.length) await chrome.tabs.remove(plan.closeTabIds);
   const stored = await chrome.storage.local.get("tabflowUndo");
   const storedUndo = stored.tabflowUndo as Record<string, unknown> | undefined;
   await chrome.storage.local.set({
     tabflowUndo: { ...(storedUndo ?? {}), createdGroupIds },
   });
+  await setUndoBadge(true);
   return {
     totalTabs: tabs.length,
     keptTabs: plan.keepTabIds.length,
@@ -157,7 +159,16 @@ export async function undoLastOrganization(): Promise<boolean> {
     }
   }
   await chrome.storage.local.remove("tabflowUndo");
+  await setUndoBadge(false);
   return true;
+}
+
+async function setUndoBadge(available: boolean): Promise<void> {
+  if (!chrome.action?.setBadgeText) return;
+  await chrome.action.setBadgeText({ text: available ? "UNDO" : "" });
+  if (available && chrome.action.setBadgeBackgroundColor) {
+    await chrome.action.setBadgeBackgroundColor({ color: "#1F4B99" });
+  }
 }
 
 function nonEmptyTabIds(tabIds: number[]): [number, ...number[]] {
@@ -179,6 +190,7 @@ function colorFor(category: string): GroupColor {
   const colors: Record<string, GroupColor> = {
     Work: "blue",
     Development: "cyan",
+    AI: "pink",
     Research: "purple",
     Shopping: "yellow",
     Travel: "green",
@@ -187,6 +199,28 @@ function colorFor(category: string): GroupColor {
     Entertainment: "red",
     Reading: "grey",
     Social: "pink",
+    Related: "grey",
   };
-  return colors[category] ?? "grey";
+  if (colors[category]) return colors[category];
+  return HASH_COLORS[stableHash(category) % HASH_COLORS.length]!;
+}
+
+const HASH_COLORS: GroupColor[] = [
+  "blue",
+  "cyan",
+  "purple",
+  "yellow",
+  "green",
+  "grey",
+  "red",
+  "pink",
+];
+
+/** Stable non-crypto hash so discovered group titles get a consistent color. */
+function stableHash(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
+  }
+  return hash;
 }

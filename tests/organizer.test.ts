@@ -77,6 +77,10 @@ function installChromeMock(
   const ungrouped: number[][] = [];
   let nextGroupId = 100;
   vi.stubGlobal("chrome", {
+    action: {
+      setBadgeText: vi.fn(async () => undefined),
+      setBadgeBackgroundColor: vi.fn(async () => undefined),
+    },
     tabGroups: {
       TAB_GROUP_ID_NONE: -1,
       query: vi.fn(async () => [{ id: 42, title: "Existing", color: "red" }]),

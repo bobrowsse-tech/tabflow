@@ -3,9 +3,18 @@ import type {
   OrganizationSettings,
   TabRecord,
 } from "../shared/types";
-import { classifyTab } from "./classifier";
+import { clusterTabs } from "./cluster-tabs";
 import { findDuplicateTabIds } from "./duplicate-detector";
 
+/** True when Chrome already has this tab in a tab group. */
+function isAlreadyGrouped(tab: TabRecord): boolean {
+  return typeof tab.groupId === "number" && tab.groupId >= 0;
+}
+
+/**
+ * Build an organization plan: duplicates first, then discovery clustering
+ * (host / shared tokens / soft hints) for eligible tabs.
+ */
 export function buildPlan(
   tabs: TabRecord[],
   settings: OrganizationSettings = {
@@ -19,42 +28,33 @@ export function buildPlan(
     : [];
   const closeSet = new Set(closeTabIds);
   const keepTabs = tabs.filter((tab) => !closeSet.has(tab.id));
-  const grouped = new Map<
-    string,
-    { tabIds: number[]; confidence: "high" | "medium"; reason: string }
-  >();
-  const ungroupedTabIds: number[] = [];
 
-  for (const tab of keepTabs) {
-    if (tab.pinned || (settings.preserveGroups && tab.groupId !== -1)) {
-      ungroupedTabIds.push(tab.id);
-      continue;
-    }
-    if (!settings.groupUngrouped) {
-      ungroupedTabIds.push(tab.id);
-      continue;
-    }
-    const classification = classifyTab(tab);
-    if (!classification.category || classification.confidence === "low") {
-      ungroupedTabIds.push(tab.id);
-      continue;
-    }
-    const current = grouped.get(classification.category) ?? {
-      tabIds: [],
-      confidence: classification.confidence,
-      reason: classification.reason,
+  if (!settings.groupUngrouped) {
+    return {
+      keepTabIds: keepTabs.map((tab) => tab.id),
+      closeTabIds,
+      groups: [],
+      ungroupedTabIds: keepTabs.map((tab) => tab.id),
     };
-    current.tabIds.push(tab.id);
-    if (classification.confidence === "high") current.confidence = "high";
-    grouped.set(classification.category, current);
   }
 
-  const groups = [...grouped.entries()]
-    .filter(([, group]) => group.tabIds.length >= 2)
-    .map(([category, group]) => ({ category: category as never, ...group }));
-  for (const group of grouped.values()) {
-    if (group.tabIds.length < 2) ungroupedTabIds.push(...group.tabIds);
+  const eligible: TabRecord[] = [];
+  const reserved: number[] = [];
+  for (const tab of keepTabs) {
+    if (tab.pinned || (settings.preserveGroups && isAlreadyGrouped(tab))) {
+      reserved.push(tab.id);
+      continue;
+    }
+    eligible.push(tab);
   }
+
+  const groups = clusterTabs(eligible);
+  const claimed = new Set(groups.flatMap((group) => group.tabIds));
+  const ungroupedTabIds = [
+    ...reserved,
+    ...eligible.filter((tab) => !claimed.has(tab.id)).map((tab) => tab.id),
+  ];
+
   return {
     keepTabIds: keepTabs.map((tab) => tab.id),
     closeTabIds,

@@ -1,6 +1,7 @@
 export type Category =
   | "Work"
   | "Development"
+  | "AI"
   | "Research"
   | "Shopping"
   | "Travel"
@@ -28,7 +29,8 @@ export interface Classification {
 }
 
 export interface PlannedGroup {
-  category: Category;
+  /** Chrome tab-group title: soft hint label, discovered token, or hostname. */
+  category: string;
   tabIds: number[];
   confidence: Confidence;
   reason: string;
@@ -67,4 +69,6 @@ export interface OrganizationResult {
 export interface PopupSummary {
   totalTabs: number;
   duplicates: number;
+  /** True when a latest-operation undo snapshot is stored locally. */
+  canUndo: boolean;
 }
