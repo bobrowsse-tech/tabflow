@@ -21,9 +21,9 @@ await exec(
     "--sequesterRsrc",
     "--norsrc",
     ".",
-    "../release/tabflow-chrome.zip",
+    "../release/cleanmytabs-chrome.zip",
   ],
   { cwd: "dist" },
 );
-await chmod("release/tabflow-chrome.zip", 0o644);
-console.log("Created release/tabflow-chrome.zip");
+await chmod("release/cleanmytabs-chrome.zip", 0o644);
+console.log("Created release/cleanmytabs-chrome.zip");

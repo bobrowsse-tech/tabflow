@@ -49,12 +49,14 @@ async function send<T>(type: string): Promise<T> {
     return { ok: true, restored: true } as T;
   }
   if (typeof chrome === "undefined" || !chrome.runtime?.sendMessage) {
-    throw new Error("Open TabFlow from Chrome to inspect the current window.");
+    throw new Error(
+      "Open CleanMyTabs from Chrome to inspect the current window.",
+    );
   }
   const response = await chrome.runtime.sendMessage({ type });
   if (!response?.ok)
     throw new Error(
-      response?.error ?? "TabFlow could not complete that action.",
+      response?.error ?? "CleanMyTabs could not complete that action.",
     );
   return response as T;
 }
@@ -78,12 +80,13 @@ async function performUndo(): Promise<void> {
     summary.textContent = undone.restored
       ? "Previous organisation undone"
       : "Nothing to undo";
-    supporting.textContent = "Only the latest TabFlow operation can be undone.";
+    supporting.textContent =
+      "Only the latest CleanMyTabs operation can be undone.";
   } catch (error) {
     summary.textContent =
       error instanceof Error
         ? error.message
-        : "TabFlow could not complete that action.";
+        : "CleanMyTabs could not complete that action.";
   }
   button.dataset.action = "";
   button.innerHTML = organizeButtonMarkup;
@@ -110,7 +113,8 @@ async function loadSummary() {
     sweep.classList.remove("done");
     if (response.summary.totalTabs <= 1) {
       summary.textContent = "Nothing to organise";
-      supporting.textContent = "Open a few tabs and TabFlow can clean them up.";
+      supporting.textContent =
+        "Open a few tabs and CleanMyTabs can clean them up.";
       button.disabled = true;
       return;
     }
@@ -167,7 +171,7 @@ button.addEventListener("click", async () => {
       result.groupsCreated === 0 && !result.error
         ? "Need two or more matching tabs to form a group."
         : "",
-      "Re-open TabFlow to undo if this popup closes.",
+      "Re-open CleanMyTabs to undo if this popup closes.",
     ]
       .filter(Boolean)
       .join(" · ");
@@ -177,7 +181,7 @@ button.addEventListener("click", async () => {
     summary.textContent =
       error instanceof Error
         ? error.message
-        : "TabFlow could not complete that action.";
+        : "CleanMyTabs could not complete that action.";
     button.textContent = "Try again";
     button.disabled = false;
   }

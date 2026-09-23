@@ -45,7 +45,7 @@ chrome.runtime.onMessage.addListener(
         error:
           error instanceof Error
             ? error.message
-            : "TabFlow could not complete that action.",
+            : "CleanMyTabs could not complete that action.",
       }),
     );
     return true;

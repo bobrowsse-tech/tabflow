@@ -1,6 +1,6 @@
-# TabFlow
+# CleanMyTabs
 
-TabFlow is a privacy-first Chrome extension that turns the current window into a clean, understandable set of tab groups in one deliberate action.
+CleanMyTabs is a privacy-first Chrome extension that turns the current window into a clean, understandable set of tab groups in one deliberate action.
 
 ## Principles
 
@@ -18,7 +18,7 @@ npm run package
 ```
 
 Load `dist/` through `chrome://extensions` with Developer mode enabled. Re-run `npm run build` after source changes.
-`npm run package` creates `release/tabflow-chrome.zip` with `manifest.json` at the archive root.
+`npm run package` creates `release/cleanmytabs-chrome.zip` with `manifest.json` at the archive root.
 
 For a visual browser-only walkthrough without Chrome permissions, open `dist/popup/index.html?demo=1` after building. The demo simulates the ready, organised, and Undo states without changing real tabs.
 
@@ -28,4 +28,4 @@ Public product and engineering documentation is in [`docs/`](docs/). Maintainer 
 
 ## Privacy
 
-TabFlow does not transmit URLs, domains, titles, tab IDs, page contents, cookies, browsing history, or usage events. See [`docs/privacy.md`](docs/privacy.md).
+CleanMyTabs does not transmit URLs, domains, titles, tab IDs, page contents, cookies, browsing history, or usage events. See [`docs/privacy.md`](docs/privacy.md).

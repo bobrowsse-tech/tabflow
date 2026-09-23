@@ -5,7 +5,7 @@ import { findDuplicateTabIds } from "../src/core/duplicate-detector";
 import { buildPlan } from "../src/core/group-planner";
 import { isSignificantToken, tokenizeTab } from "../src/core/tab-tokens";
 
-describe("TabFlow core logic", () => {
+describe("CleanMyTabs core logic", () => {
   it("canonicalises obvious URL formatting without dropping meaningful query data", () => {
     expect(canonicalizeUrl("HTTPS://Example.com:443/path?a=1#part")).toBe(
       "https://example.com/path?a=1",

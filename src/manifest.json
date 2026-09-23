@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "TabFlow",
-  "version": "0.1.0",
+  "name": "CleanMyTabs",
+  "version": "0.1.1",
   "description": "Organise the current Chrome window locally, with a clear path back.",
   "permissions": ["tabs", "tabGroups", "storage"],
   "icons": {
@@ -11,7 +11,7 @@
     "128": "assets/icon-128.png"
   },
   "action": {
-    "default_title": "TabFlow",
+    "default_title": "CleanMyTabs",
     "default_popup": "popup/index.html",
     "default_icon": {
       "16": "assets/icon-16.png",
