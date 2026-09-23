@@ -28,8 +28,8 @@ Use the public repository privacy policy at `docs/privacy.md` as the source for 
 
 ## Store assets
 
-- `docs/store-assets/tabflow-ready.png`
-- `docs/store-assets/tabflow-organized.png`
+- `docs/store-assets/cleanmytabs-ready.png`
+- `docs/store-assets/cleanmytabs-organized.png`
 - `src/assets/icon-128.png` as the store icon
 
 ## Submission checklist
