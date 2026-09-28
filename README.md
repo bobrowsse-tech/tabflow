@@ -28,15 +28,7 @@ Pushes to `main` run [`.github/workflows/release.yml`](.github/workflows/release
 2. Merging that to `main` opens a pull request titled `chore: version packages`.
 3. Merging the version pull request bumps `package.json` and `src/manifest.json` together, builds `release/cleanmytabs-chrome.zip`, uploads it to the Chrome Web Store, and tags `vX.Y.Z`.
 
-The upload is skipped when that version tag already exists, and when the repository secrets are missing. Add these secrets before the first store upload:
-
-| Secret | Where it comes from |
-|---|---|
-| `CHROME_EXTENSION_ID` | The extension id in the Chrome Web Store developer dashboard |
-| `CHROME_PUBLISHER_ID` | The publisher id in that same dashboard URL |
-| `CHROME_CLIENT_ID` | Google Cloud OAuth desktop client, with the Chrome Web Store API enabled |
-| `CHROME_CLIENT_SECRET` | That OAuth client |
-| `CHROME_REFRESH_TOKEN` | `npx chrome-webstore-upload-keys`, using the client id and secret |
+The upload is skipped when that version tag already exists, and when the private GitHub Actions store credentials are missing. Those credentials are maintainer-only and are not documented in this public repository.
 
 A push to `main` with no pending changeset publishes the current version. If that version is already on the store, add a changeset and merge the version pull request first so the manifest version increases.
 
