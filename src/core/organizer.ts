@@ -94,7 +94,18 @@ export async function organizeWindow(
   };
 }
 
-export async function undoLastOrganization(): Promise<boolean> {
+let undoInFlight: Promise<boolean> | undefined;
+
+/** One undo at a time, so a retry while the first is still running does not restore the same tabs twice. */
+export function undoLastOrganization(): Promise<boolean> {
+  if (undoInFlight) return undoInFlight;
+  undoInFlight = runUndo().finally(() => {
+    undoInFlight = undefined;
+  });
+  return undoInFlight;
+}
+
+async function runUndo(): Promise<boolean> {
   const stored = await chrome.storage.local.get("tabflowUndo");
   const snapshot = stored.tabflowUndo as
     | {
