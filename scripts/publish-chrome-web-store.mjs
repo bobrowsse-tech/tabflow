@@ -42,7 +42,7 @@ const refreshToken = process.env.CHROME_REFRESH_TOKEN;
 
 if (!extensionId || !publisherId || !clientId || !clientSecret || !refreshToken) {
   console.log(
-    "Chrome Web Store secrets are not set. Skipping upload. Add CHROME_EXTENSION_ID, CHROME_PUBLISHER_ID, CHROME_CLIENT_ID, CHROME_CLIENT_SECRET, and CHROME_REFRESH_TOKEN.",
+    "Chrome Web Store credentials are not set in this environment. Skipping upload.",
   );
   noteChangesetsOutput();
   process.exit(0);
