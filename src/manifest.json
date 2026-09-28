@@ -1,9 +1,13 @@
 {
   "manifest_version": 3,
   "name": "CleanMyTabs",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Organise the current Chrome window locally, with a clear path back.",
-  "permissions": ["tabs", "tabGroups", "storage"],
+  "permissions": [
+    "tabs",
+    "tabGroups",
+    "storage"
+  ],
   "icons": {
     "16": "assets/icon-16.png",
     "32": "assets/icon-32.png",
