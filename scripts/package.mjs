@@ -13,17 +13,12 @@ for (const size of iconSizes) {
 
 await rm("release", { recursive: true, force: true });
 await mkdir("release", { recursive: true });
-await exec(
-  "ditto",
-  [
-    "-c",
-    "-k",
-    "--sequesterRsrc",
-    "--norsrc",
-    ".",
-    "../release/cleanmytabs-chrome.zip",
-  ],
-  { cwd: "dist" },
-);
-await chmod("release/cleanmytabs-chrome.zip", 0o644);
+const zipPath = "release/cleanmytabs-chrome.zip";
+// zip (not ditto) so the same archive is produced on macOS and on GitHub's Linux runners.
+await exec("zip", ["-r", "-X", "-q", `../${zipPath}`, ".", "-x", "*.DS_Store"], { cwd: "dist" });
+const { stdout: listing } = await exec("unzip", ["-Z1", zipPath], { encoding: "utf8" });
+if (!listing.split("\n").includes("manifest.json")) {
+  throw new Error("manifest.json is not at the root of release/cleanmytabs-chrome.zip");
+}
+await chmod(zipPath, 0o644);
 console.log("Created release/cleanmytabs-chrome.zip");

@@ -12,7 +12,10 @@ docs/local-only/
 .githooks/
 .husky/
 .gitattributes
-.github/
+.github/**
+!.github/workflows/
+!.github/workflows/ci.yml
+!.github/workflows/release.yml
 AGENTS.md
 CLAUDE.md
 scripts/ai/

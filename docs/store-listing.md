@@ -41,6 +41,7 @@ Use the public repository privacy policy at `docs/privacy.md` as the source for 
 - [x] Complete the privacy practices disclosure.
 - [x] Select category, language, regions, and visibility.
 - [x] Submit for review (accepted as TabFlow).
-- [ ] Upload renamed package `release/cleanmytabs-chrome.zip` (version ≥ previous).
+- [ ] Add the Chrome Web Store secrets listed in the README so `.github/workflows/release.yml` can upload.
+- [ ] Upload renamed package `release/cleanmytabs-chrome.zip` (version ≥ previous), either from the release workflow or by hand.
 - [ ] Update store listing name/description strings from TabFlow → CleanMyTabs.
-- [ ] Submit update for review.
+- [ ] Submit update for review. The release workflow submits the package; the listing text is still edited in the dashboard.
