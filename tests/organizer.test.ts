@@ -207,6 +207,20 @@ describe("Chrome organization simulation", () => {
     ]);
   });
 
+  it("shares one undo when a second undo starts before the first finishes", async () => {
+    const mock = installChromeMock();
+    await organizeWindow(7);
+
+    const [first, second] = await Promise.all([
+      undoLastOrganization(),
+      undoLastOrganization(),
+    ]);
+
+    expect(first).toBe(true);
+    expect(second).toBe(true);
+    expect(mock.created).toHaveLength(1);
+  });
+
   it("reports a partial result when Chrome rejects grouping", async () => {
     const mock = installChromeMock({ failGrouping: true });
 

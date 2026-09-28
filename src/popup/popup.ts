@@ -5,10 +5,17 @@ const cancel = document.querySelector<HTMLButtonElement>("#cancel")!;
 const sweep = document.querySelector<HTMLDivElement>(".status-sweep")!;
 const organizeButtonMarkup = button.innerHTML;
 const undoButtonMarkup = `<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M9 7H5v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5A7 7 0 1 0 8 5.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Undo</span>`;
+const undoingButtonMarkup = undoButtonMarkup.replace(
+  "<span>Undo</span>",
+  "<span>Undoing...</span>",
+);
+/** How long "Undoing..." may stay before the button becomes clickable again. */
+const UNDO_RESET_MS = 15_000;
 const demoMode =
   new URLSearchParams(window.location.search).get("demo") === "1";
 let duplicateCount = 0;
 let confirmationShown = false;
+let undoAttempt = 0;
 
 function applyTheme(theme: string | undefined): void {
   if (theme === "Light" || theme === "Dark") {
@@ -61,33 +68,63 @@ async function send<T>(type: string): Promise<T> {
   return response as T;
 }
 
+function showUndoButton(): void {
+  button.dataset.action = "undo";
+  button.innerHTML = undoButtonMarkup;
+  button.disabled = false;
+}
+
 function enterUndoMode(detail: string): void {
   confirmationShown = false;
   cancel.hidden = true;
   sweep.classList.add("done");
   summary.textContent = "Workspace organised";
   supporting.textContent = detail;
-  button.dataset.action = "undo";
-  button.innerHTML = undoButtonMarkup;
-  button.disabled = false;
+  showUndoButton();
+}
+
+function releaseHungUndo(): void {
+  summary.textContent = "Undo did not finish";
+  supporting.textContent = "The button is ready again. Try Undo once more.";
+  showUndoButton();
 }
 
 async function performUndo(): Promise<void> {
+  const attempt = ++undoAttempt;
+  let timedOut = false;
   button.disabled = true;
-  button.innerHTML = `<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path d="M9 7H5v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5A7 7 0 1 0 8 5.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Undoing...</span>`;
+  button.innerHTML = undoingButtonMarkup;
+  const timer = window.setTimeout(() => {
+    if (attempt !== undoAttempt) return;
+    timedOut = true;
+    releaseHungUndo();
+  }, UNDO_RESET_MS);
   try {
     const undone = await send<{ restored: boolean }>("undo");
+    if (attempt !== undoAttempt) return;
+    if (timedOut) {
+      await loadSummary();
+      return;
+    }
     summary.textContent = undone.restored
       ? "Previous organisation undone"
       : "Nothing to undo";
     supporting.textContent =
       "Only the latest CleanMyTabs operation can be undone.";
   } catch (error) {
+    if (attempt !== undoAttempt) return;
+    if (timedOut) {
+      await loadSummary();
+      return;
+    }
     summary.textContent =
       error instanceof Error
         ? error.message
         : "CleanMyTabs could not complete that action.";
+  } finally {
+    window.clearTimeout(timer);
   }
+  if (attempt !== undoAttempt || timedOut) return;
   button.dataset.action = "";
   button.innerHTML = organizeButtonMarkup;
   button.disabled = false;
